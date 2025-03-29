@@ -18,6 +18,7 @@ A web-based application that allows users to:
 - Background processing with real-time status updates
 - Progress tracking for large PDF files
 - Dark/light mode for image viewing
+- Disk usage monitoring and file cleanup
 - Docker-based for easy deployment
 - CPU usage allocation (50% of all cores)
 - Production-ready with Gunicorn WSGI server
@@ -93,6 +94,7 @@ Examples:
 4. Monitor processing progress with real-time status updates
 5. View the results in the web browser when processing is complete
 6. Download individual images or all images as a ZIP file
+7. Use the cleanup feature to free up disk space when necessary
 
 ## Technical Details
 
@@ -189,4 +191,16 @@ The application uses Gunicorn as a production-grade WSGI server instead of Flask
 
 ## License
 
-See the [LICENSE](LICENSE) file for details. 
+See the [LICENSE](LICENSE) file for details.
+
+## Maintenance
+
+### Disk Space Management
+
+The application includes a disk usage monitoring and cleanup feature that allows you to:
+
+1. View current disk usage statistics for uploads, processed images, and status files
+2. Free up disk space by removing completed processing jobs and their associated files
+3. Automatically track disk usage with a visual breakdown of space allocation
+
+This feature helps maintain the server's performance by preventing disk space issues, especially in high-traffic environments where many PDFs are processed. 

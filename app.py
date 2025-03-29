@@ -4,6 +4,7 @@ import uuid
 import time
 import threading
 import json
+import shutil
 from datetime import datetime
 from flask import Flask, request, render_template, send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
@@ -172,8 +173,6 @@ def download_file(file_id, filename):
 
 @app.route('/download-all/<file_id>')
 def download_all(file_id):
-    import shutil
-    
     # Check if processing is complete
     status = get_status(file_id)
     if status['status'] != 'completed':
@@ -194,6 +193,139 @@ def download_all(file_id):
     )
     
     return send_from_directory(app.config['OUTPUT_FOLDER'], zip_filename)
+
+@app.route('/cleanup', methods=['POST'])
+def cleanup():
+    """Clean up uploads, output, and status folders"""
+    try:
+        # Get list of items to keep (e.g., currently processing files)
+        active_tasks = list(processing_tasks.keys())
+        
+        # Clean up output folder
+        output_count = 0
+        for item in os.listdir(app.config['OUTPUT_FOLDER']):
+            item_path = os.path.join(app.config['OUTPUT_FOLDER'], item)
+            
+            # Skip if it's an active task
+            skip = False
+            for task_id in active_tasks:
+                if task_id in item:
+                    skip = True
+                    break
+            
+            if skip:
+                continue
+                
+            # Remove the item
+            if os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+            else:
+                os.remove(item_path)
+            output_count += 1
+        
+        # Clean up uploads folder
+        upload_count = 0
+        for item in os.listdir(app.config['UPLOAD_FOLDER']):
+            item_path = os.path.join(app.config['UPLOAD_FOLDER'], item)
+            
+            # Skip if it's an active task
+            skip = False
+            for task_id in active_tasks:
+                if task_id in item:
+                    skip = True
+                    break
+            
+            if skip:
+                continue
+                
+            # Remove the item
+            os.remove(item_path)
+            upload_count += 1
+        
+        # Clean up status folder
+        status_count = 0
+        for item in os.listdir(app.config['STATUS_FOLDER']):
+            if not item.endswith('.json'):
+                continue
+                
+            item_path = os.path.join(app.config['STATUS_FOLDER'], item)
+            
+            # Skip if it's an active task
+            skip = False
+            for task_id in active_tasks:
+                if task_id in item:
+                    skip = True
+                    break
+            
+            if skip:
+                continue
+                
+            # Remove the item
+            os.remove(item_path)
+            status_count += 1
+        
+        message = f"清理完成: 已删除 {output_count} 个输出文件夹, {upload_count} 个上传文件, 和 {status_count} 个状态文件"
+        return jsonify({'success': True, 'message': message})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/disk-usage')
+def disk_usage():
+    """Get disk usage information for the app folders"""
+    try:
+        def get_size(path):
+            total_size = 0
+            item_count = 0
+            for dirpath, dirnames, filenames in os.walk(path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    if os.path.exists(fp):
+                        total_size += os.path.getsize(fp)
+                        item_count += 1
+            return total_size, item_count
+        
+        # Get sizes
+        upload_size, upload_count = get_size(app.config['UPLOAD_FOLDER'])
+        output_size, output_count = get_size(app.config['OUTPUT_FOLDER'])
+        status_size, status_count = get_size(app.config['STATUS_FOLDER'])
+        
+        # Format sizes
+        def format_size(size_bytes):
+            if size_bytes < 1024:
+                return f"{size_bytes} B"
+            elif size_bytes < 1024 * 1024:
+                return f"{size_bytes/1024:.1f} KB"
+            elif size_bytes < 1024 * 1024 * 1024:
+                return f"{size_bytes/(1024*1024):.1f} MB"
+            else:
+                return f"{size_bytes/(1024*1024*1024):.2f} GB"
+        
+        # Return usage info
+        return jsonify({
+            'success': True,
+            'uploads': {
+                'size': format_size(upload_size),
+                'count': upload_count,
+                'raw_size': upload_size
+            },
+            'output': {
+                'size': format_size(output_size),
+                'count': output_count,
+                'raw_size': output_size
+            },
+            'status': {
+                'size': format_size(status_size),
+                'count': status_count,
+                'raw_size': status_size
+            },
+            'total': {
+                'size': format_size(upload_size + output_size + status_size),
+                'count': upload_count + output_count + status_count,
+                'raw_size': upload_size + output_size + status_size
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090, debug=False) 

@@ -180,10 +180,119 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Cleanup Section -->
+        <div class="mt-4 p-3 bg-light rounded">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>系统维护</h5>
+                    <p class="text-muted small mb-2">清理所有已处理完成的文件，释放磁盘空间</p>
+                </div>
+                <div>
+                    <button id="cleanupButton" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-2"></i>清理临时文件
+                    </button>
+                </div>
+            </div>
+            
+            <div id="diskUsage" class="mt-3" style="display: none;">
+                <div class="progress mb-2" style="height: 25px;">
+                    <div id="uploadsProgress" class="progress-bar bg-primary" role="progressbar" style="width: 0%" 
+                        data-bs-toggle="tooltip" title="上传文件">0%</div>
+                    <div id="outputProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%"
+                        data-bs-toggle="tooltip" title="输出图片">0%</div>
+                    <div id="statusProgress" class="progress-bar bg-info" role="progressbar" style="width: 0%"
+                        data-bs-toggle="tooltip" title="状态文件">0%</div>
+                </div>
+                <div class="d-flex justify-content-between text-muted small">
+                    <div>
+                        <i class="fas fa-file-upload me-1"></i> 上传: <span id="uploadsSize">0 MB</span> (<span id="uploadsCount">0</span> 个文件)
+                    </div>
+                    <div>
+                        <i class="fas fa-images me-1"></i> 输出: <span id="outputSize">0 MB</span> (<span id="outputCount">0</span> 个文件)
+                    </div>
+                    <div>
+                        <i class="fas fa-hdd me-1"></i> 总计: <span id="totalSize">0 MB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Load disk usage on page load
+            updateDiskUsage();
+        });
+        
+        // Function to update disk usage display
+        function updateDiskUsage() {
+            fetch('/disk-usage')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show the disk usage section
+                        document.getElementById('diskUsage').style.display = 'block';
+                        
+                        // Update text values
+                        document.getElementById('uploadsSize').textContent = data.uploads.size;
+                        document.getElementById('uploadsCount').textContent = data.uploads.count;
+                        document.getElementById('outputSize').textContent = data.output.size;
+                        document.getElementById('outputCount').textContent = data.output.count;
+                        document.getElementById('totalSize').textContent = data.total.size;
+                        
+                        // Calculate percentages for progress bars
+                        const total = data.total.raw_size;
+                        if (total > 0) {
+                            const uploadsPercent = (data.uploads.raw_size / total * 100).toFixed(1);
+                            const outputPercent = (data.output.raw_size / total * 100).toFixed(1);
+                            const statusPercent = (data.status.raw_size / total * 100).toFixed(1);
+                            
+                            // Update progress bars
+                            document.getElementById('uploadsProgress').style.width = uploadsPercent + '%';
+                            document.getElementById('uploadsProgress').textContent = uploadsPercent + '%';
+                            document.getElementById('outputProgress').style.width = outputPercent + '%';
+                            document.getElementById('outputProgress').textContent = outputPercent + '%';
+                            document.getElementById('statusProgress').style.width = statusPercent + '%';
+                            document.getElementById('statusProgress').textContent = statusPercent + '%';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting disk usage:', error);
+                });
+        }
+        
+        // Cleanup functionality
+        document.getElementById('cleanupButton').addEventListener('click', function() {
+            if (confirm('确定要清理所有临时文件吗？这将删除所有已处理的PDF和图片。')) {
+                fetch('/cleanup', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Update disk usage after cleanup
+                        updateDiskUsage();
+                    } else {
+                        alert('清理失败: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请重试');
+                });
+            }
+        });
+        
         document.getElementById('cropMargin').addEventListener('input', function() {
             document.getElementById('cropValue').textContent = this.value;
         });
