@@ -4,4 +4,5 @@ opencv-python-headless==4.7.0.72
 pillow==9.5.0
 flask==2.3.3
 werkzeug==2.3.7
-gunicorn==21.2.0 
+gunicorn==21.2.0
+gevent==23.9.1 

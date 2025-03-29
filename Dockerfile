@@ -20,7 +20,7 @@ WORKDIR /app
 # Copy application files
 COPY pdf_to_image.py .
 COPY app.py .
-RUN mkdir -p templates static uploads output
+RUN mkdir -p templates static uploads output status
 COPY templates/ templates/
 COPY static/ static/
 
@@ -30,5 +30,5 @@ RUN chmod +x pdf_to_image.py app.py
 # Expose the non-standard port
 EXPOSE 8090
 
-# Set default command to use Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8090", "--workers", "4", "--timeout", "120", "app:app"] 
+# Set default command to use Gunicorn with increased timeout and gevent worker
+CMD ["gunicorn", "--bind", "0.0.0.0:8090", "--workers", "4", "--timeout", "300", "--worker-class", "gevent", "--worker-connections", "1000", "app:app"] 

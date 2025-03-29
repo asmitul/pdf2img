@@ -64,8 +64,8 @@ case "$1" in
             docker build -t $IMAGE_NAME .
             
             echo "Creating directories..."
-            mkdir -p uploads output
-            chmod -R 777 uploads output
+            mkdir -p uploads output status
+            chmod -R 777 uploads output status
             
             echo "Starting container with 50% CPU limit..."
             docker run -d \
@@ -74,6 +74,7 @@ case "$1" in
               -p $PORT:8090 \
               -v "$(pwd)/uploads:/app/uploads" \
               -v "$(pwd)/output:/app/output" \
+              -v "$(pwd)/status:/app/status" \
               --restart unless-stopped \
               $IMAGE_NAME
         fi
@@ -97,8 +98,8 @@ case "$1" in
         docker build -t $IMAGE_NAME .
         
         echo "Creating directories..."
-        mkdir -p uploads output
-        chmod -R 777 uploads output
+        mkdir -p uploads output status
+        chmod -R 777 uploads output status
         
         echo "Starting container with 50% CPU limit..."
         docker run -d \
@@ -107,6 +108,7 @@ case "$1" in
           -p $PORT:8090 \
           -v "$(pwd)/uploads:/app/uploads" \
           -v "$(pwd)/output:/app/output" \
+          -v "$(pwd)/status:/app/status" \
           --restart unless-stopped \
           $IMAGE_NAME
           

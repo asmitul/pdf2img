@@ -261,21 +261,9 @@
                 clearInterval(progressInterval);
                 clearInterval(statusInterval);
                 
-                progressBar.style.width = '100%';
-                progressBar.textContent = '100%';
-                processingStatus.textContent = "处理完成!";
-                
                 if (data.success) {
-                    setTimeout(function() {
-                        loadingOverlay.style.display = 'none';
-                        progress.style.display = 'none';
-                        result.style.display = 'block';
-                        formContainer.classList.remove('form-disabled');
-                        document.getElementById('resultMessage').textContent = data.message;
-                        document.getElementById('viewLink').href = '/view/' + data.id;
-                        document.getElementById('downloadLink').href = '/download-all/' + data.id;
-                        button.disabled = false;
-                    }, 500);
+                    // Redirect to processing page for background task monitoring
+                    window.location.href = '/view/' + data.id;
                 } else {
                     loadingOverlay.style.display = 'none';
                     progress.style.display = 'none';

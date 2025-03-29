@@ -15,6 +15,8 @@ A web-based application that allows users to:
   - Split double pages
   - Crop margins to remove artifacts
 - Responsive design for mobile and desktop
+- Background processing with real-time status updates
+- Progress tracking for large PDF files
 - Dark/light mode for image viewing
 - Docker-based for easy deployment
 - CPU usage limitation (50% by default)
@@ -88,14 +90,17 @@ Examples:
    - Split pages option (for books with two pages per sheet)
    - Crop margins (to remove unwanted borders)
 3. Click "Upload and Convert" to process the file
-4. View the results in the web browser
-5. Download individual images or all images as a ZIP file
+4. Monitor processing progress with real-time status updates
+5. View the results in the web browser when processing is complete
+6. Download individual images or all images as a ZIP file
 
 ## Technical Details
 
 This application uses:
 - Flask for the web framework
-- Gunicorn as the production WSGI server
+- Gunicorn as the production WSGI server with gevent worker for better concurrency
+- Background processing for handling large files asynchronously
+- Real-time status tracking with AJAX polling
 - pdf2image for PDF processing
 - OpenCV for image processing and deskewing
 - Bootstrap for the user interface
@@ -105,6 +110,7 @@ This application uses:
 
 - `/uploads`: Temporary storage for uploaded PDF files
 - `/output`: Storage for processed images
+- `/status`: Status files for tracking background processing
 - `/templates`: HTML templates
 - `/static`: CSS and static assets
 
