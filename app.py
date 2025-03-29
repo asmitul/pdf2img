@@ -179,8 +179,11 @@ def view_results(file_id):
     
     if not images:
         return "No images found", 404
+    
+    # Get original filename for display
+    original_filename = status.get('original_filename', '未知文件名')
         
-    return render_template('view.html', file_id=file_id, images=images)
+    return render_template('view.html', file_id=file_id, images=images, original_filename=original_filename)
 
 @app.route('/download/<file_id>/<filename>')
 def download_file(file_id, filename):
@@ -359,6 +362,9 @@ def conversion_history():
                 with open(file_path, 'r') as f:
                     status_data = json.load(f)
                 
+                # Debug output
+                print(f"Status data for {status_file}: {status_data}")
+                
                 file_id = status_data.get('id', status_file.replace('.json', ''))
                 
                 # Check if output directory exists and count images
@@ -385,6 +391,7 @@ def conversion_history():
                 
                 # Get original filename
                 original_filename = status_data.get('original_filename', '未知文件名')
+                print(f"Original filename: {original_filename}")
                 
                 # Get processing parameters
                 dpi = status_data.get('dpi', 300)

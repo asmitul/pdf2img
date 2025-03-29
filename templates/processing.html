@@ -90,6 +90,9 @@
             
             <div class="status-details">
                 <div><strong>文件ID:</strong> <span id="fileId">{{ file_id }}</span></div>
+                {% if status.original_filename %}
+                <div><strong>原始文件名:</strong> <span>{{ status.original_filename }}</span></div>
+                {% endif %}
                 <div><strong>状态:</strong> <span id="status">{{ status.status }}</span></div>
                 <div><strong>上次更新:</strong> <span id="lastUpdate">计算中...</span></div>
             </div>
