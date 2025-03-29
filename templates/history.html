@@ -126,6 +126,13 @@
                                 <a href="/download-all/{{ conversion.id }}" class="btn btn-sm btn-success">
                                     <i class="fas fa-download me-1"></i>下载
                                 </a>
+                                {% if current_user.is_superadmin %}
+                                <form action="/delete-conversion/{{ conversion.id }}" method="POST" style="display: inline;" onsubmit="return confirm('确定要删除此转换记录吗？此操作不可撤销。');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash me-1"></i>删除
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -19,6 +19,7 @@ app.config['STATUS_FOLDER'] = 'status'
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max file size
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'  # For session/login security
 app.config['USERS_FILE'] = 'users.json'  # File to store user data
+app.config['SUPERADMIN_ID'] = 'admin'  # The ID of the superadmin user who can delete conversions
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -40,6 +41,8 @@ class User(UserMixin):
         self.username = username
         self.password_hash = password_hash
         self.is_admin = is_admin
+        # Special flag to identify the main admin who can delete files
+        self.is_superadmin = (id == app.config['SUPERADMIN_ID'])
 
     @staticmethod
     def check_password(password_hash, password):
@@ -730,6 +733,44 @@ def conversion_history():
         return render_template('history.html', conversions=conversions)
     except Exception as e:
         return f"Error retrieving conversion history: {str(e)}", 500
+
+@app.route('/delete-conversion/<file_id>', methods=['POST'])
+@login_required
+def delete_conversion(file_id):
+    """Delete a specific conversion and its associated files"""
+    # Only the superadmin (original admin) can delete conversions
+    if not current_user.is_superadmin:
+        flash('您没有权限删除此文件', 'danger')
+        return redirect(url_for('index'))
+    
+    status = get_status(file_id)
+    
+    try:
+        # Delete output directory
+        output_dir = os.path.join(app.config['OUTPUT_FOLDER'], file_id)
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        
+        # Delete uploaded PDF file
+        pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{file_id}.pdf")
+        if os.path.exists(pdf_path):
+            os.remove(pdf_path)
+        
+        # Delete status file
+        status_file = os.path.join(app.config['STATUS_FOLDER'], f"{file_id}.json")
+        if os.path.exists(status_file):
+            os.remove(status_file)
+        
+        # Delete any zip files associated with this conversion
+        zip_path = os.path.join(app.config['OUTPUT_FOLDER'], f"{file_id}_images.zip")
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+        
+        flash('转换记录已成功删除', 'success')
+        return redirect(url_for('conversion_history'))
+    except Exception as e:
+        flash(f'删除失败: {str(e)}', 'danger')
+        return redirect(url_for('conversion_history'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090, debug=False) 
