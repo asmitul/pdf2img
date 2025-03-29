@@ -22,6 +22,37 @@ if [ $# -lt 1 ]; then
     show_usage
 fi
 
+# Function to check if application is running
+check_app_status() {
+    echo "Checking application status..."
+    
+    # Ensure the container is running
+    if ! docker ps | grep -q $CONTAINER_NAME; then
+        echo "Container is not running."
+        return 1
+    fi
+    
+    # Wait up to 60 seconds for the application to start
+    echo "Waiting for application to start (this may take up to 60 seconds)..."
+    for i in {1..12}; do
+        echo "Attempt $i/12 - waiting 5 seconds..."
+        sleep 5
+        
+        # Check container logs for successful start
+        if docker logs $CONTAINER_NAME 2>&1 | grep -q "Running on http"; then
+            if curl -s http://localhost:$PORT -m 3 > /dev/null; then
+                echo "✅ Application is running at http://localhost:$PORT"
+                return 0
+            fi
+        fi
+    done
+    
+    echo "❌ Application failed to start properly."
+    echo "Container logs:"
+    docker logs $CONTAINER_NAME
+    return 1
+}
+
 case "$1" in
     start)
         # Check if container exists
@@ -47,18 +78,20 @@ case "$1" in
               $IMAGE_NAME
         fi
         
-        echo "Application is running at http://localhost:$PORT"
+        # Check application status
+        check_app_status
         ;;
         
     stop)
         echo "Stopping container..."
         docker stop $CONTAINER_NAME
+        echo "Container stopped."
         ;;
         
     restart)
         echo "Stopping existing container..."
-        docker stop $CONTAINER_NAME || true
-        docker rm $CONTAINER_NAME || true
+        docker stop $CONTAINER_NAME 2>/dev/null || true
+        docker rm $CONTAINER_NAME 2>/dev/null || true
         
         echo "Building Docker image..."
         docker build -t $IMAGE_NAME .
@@ -77,15 +110,26 @@ case "$1" in
           --restart unless-stopped \
           $IMAGE_NAME
           
-        echo "Application is running at http://localhost:$PORT"
+        # Check application status
+        check_app_status
         ;;
         
     status)
         if docker ps | grep -q $CONTAINER_NAME; then
-            echo "Application is running at http://localhost:$PORT"
-            docker ps | grep $CONTAINER_NAME
+            echo "Container is running. Checking application..."
+            if curl -s http://localhost:$PORT -m 3 > /dev/null; then
+                echo "✅ Application is accessible at http://localhost:$PORT"
+                docker ps | grep $CONTAINER_NAME
+            else
+                echo "⚠️ Container is running but application is not accessible."
+                echo "Container logs:"
+                docker logs --tail 20 $CONTAINER_NAME
+            fi
         else
-            echo "Application is not running"
+            echo "Application is not running."
+            if docker ps -a | grep -q $CONTAINER_NAME; then
+                echo "Container exists but is not running. Use 'start' to start it."
+            fi
         fi
         ;;
         
