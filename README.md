@@ -18,6 +18,7 @@ A web-based application that allows users to:
 - Dark/light mode for image viewing
 - Docker-based for easy deployment
 - CPU usage limitation (50% by default)
+- Production-ready with Gunicorn WSGI server
 - GitHub Actions deployment support
 
 ## Prerequisites
@@ -94,6 +95,7 @@ Examples:
 
 This application uses:
 - Flask for the web framework
+- Gunicorn as the production WSGI server
 - pdf2image for PDF processing
 - OpenCV for image processing and deskewing
 - Bootstrap for the user interface
@@ -163,6 +165,15 @@ If you prefer to run commands manually:
 ## Resource Limitations
 
 The Docker container is limited to 50% CPU usage to prevent it from consuming excessive resources. This configuration is set in both the GitHub Actions workflow file and the local-run.sh script.
+
+## Production Deployment
+
+The application uses Gunicorn as a production-grade WSGI server instead of Flask's built-in development server. This provides:
+
+- Better performance and stability
+- Multiple worker processes (4 by default)
+- Proper handling of concurrent requests
+- Longer timeout (120 seconds) for processing large PDF files
 
 ## License
 

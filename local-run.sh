@@ -33,15 +33,15 @@ check_app_status() {
     fi
     
     # Wait up to 60 seconds for the application to start
-    echo "Waiting for application to start (this may take up to 60 seconds)..."
+    echo "Waiting for Gunicorn server to start (this may take up to 60 seconds)..."
     for i in {1..12}; do
         echo "Attempt $i/12 - waiting 5 seconds..."
         sleep 5
         
         # Check container logs for successful start
-        if docker logs $CONTAINER_NAME 2>&1 | grep -q "Running on http"; then
+        if docker logs $CONTAINER_NAME 2>&1 | grep -q "Booting worker"; then
             if curl -s http://localhost:$PORT -m 3 > /dev/null; then
-                echo "✅ Application is running at http://localhost:$PORT"
+                echo "✅ Local server is running at http://localhost:$PORT"
                 return 0
             fi
         fi

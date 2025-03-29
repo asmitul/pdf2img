@@ -30,5 +30,5 @@ RUN chmod +x pdf_to_image.py app.py
 # Expose the non-standard port
 EXPOSE 8090
 
-# Set default command
-CMD ["python", "app.py"] 
+# Set default command to use Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8090", "--workers", "4", "--timeout", "120", "app:app"] 

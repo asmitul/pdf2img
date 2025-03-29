@@ -59,15 +59,15 @@ jobs:
         fi
         
         # Wait up to 60 seconds for the application to start
-        echo "Waiting for application to start (this may take up to 60 seconds)..."
+        echo "Waiting for Gunicorn server to start (this may take up to 60 seconds)..."
         for i in {1..12}; do
           echo "Attempt $i/12 - waiting 5 seconds..."
           sleep 5
           
-          # Check container logs for successful start
-          if docker logs ${{ env.CONTAINER_NAME }} 2>&1 | grep -q "Running on http"; then
-            if curl -s http://${{ secrets.HOST }}:${{ env.PORT }} -m 3 > /dev/null; then
-              echo "✅ Deployment successful! Application is running at http://${{ secrets.HOST }}:${{ env.PORT }}"
+          # Check if Gunicorn is ready
+          if docker logs ${{ env.CONTAINER_NAME }} 2>&1 | grep -q "Booting worker"; then
+            if curl -s http://localhost:${{ env.PORT }} -m 3 > /dev/null; then
+              echo "✅ Deployment successful! Production server is running at http://localhost:${{ env.PORT }}"
               docker ps | grep ${{ env.CONTAINER_NAME }}
               exit 0
             fi
