@@ -4,6 +4,7 @@
 IMAGE_NAME="pdf-to-image-web"
 CONTAINER_NAME="pdf2img-app"
 PORT=8090
+CPU_CORES=3.0
 
 # Function to show usage
 show_usage() {
@@ -67,10 +68,10 @@ case "$1" in
             mkdir -p uploads output status
             chmod -R 777 uploads output status
             
-            echo "Starting container with 50% CPU limit..."
+            echo "Starting container with $CPU_CORES CPU cores..."
             docker run -d \
               --name $CONTAINER_NAME \
-              --cpus=0.5 \
+              --cpus=$CPU_CORES \
               -p $PORT:8090 \
               -v "$(pwd)/uploads:/app/uploads" \
               -v "$(pwd)/output:/app/output" \
@@ -101,10 +102,10 @@ case "$1" in
         mkdir -p uploads output status
         chmod -R 777 uploads output status
         
-        echo "Starting container with 50% CPU limit..."
+        echo "Starting container with $CPU_CORES CPU cores..."
         docker run -d \
           --name $CONTAINER_NAME \
-          --cpus=0.5 \
+          --cpus=$CPU_CORES \
           -p $PORT:8090 \
           -v "$(pwd)/uploads:/app/uploads" \
           -v "$(pwd)/output:/app/output" \

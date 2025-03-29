@@ -13,6 +13,7 @@ jobs:
       IMAGE_NAME: pdf-to-image-web
       CONTAINER_NAME: pdf2img-app
       PORT: 8090
+      CPU_CORES: 3.0
     
     steps:
     - name: Checkout code
@@ -38,10 +39,10 @@ jobs:
         
     - name: Start container
       run: |
-        echo "Starting container with 50% CPU limit..."
+        echo "Starting container with ${{ env.CPU_CORES }} CPU cores..."
         docker run -d \
           --name ${{ env.CONTAINER_NAME }} \
-          --cpus=0.5 \
+          --cpus=${{ env.CPU_CORES }} \
           -p ${{ env.PORT }}:8090 \
           -v "$(pwd)/uploads:/app/uploads" \
           -v "$(pwd)/output:/app/output" \

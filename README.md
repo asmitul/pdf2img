@@ -19,7 +19,7 @@ A web-based application that allows users to:
 - Progress tracking for large PDF files
 - Dark/light mode for image viewing
 - Docker-based for easy deployment
-- CPU usage limitation (50% by default)
+- CPU usage allocation (50% of all cores)
 - Production-ready with Gunicorn WSGI server
 - GitHub Actions deployment support
 
@@ -152,25 +152,31 @@ If you prefer to run commands manually:
 
 2. Create necessary directories:
    ```
-   mkdir -p uploads output
-   chmod -R 777 uploads output
+   mkdir -p uploads output status
+   chmod -R 777 uploads output status
    ```
 
 3. Run the container:
    ```
    docker run -d \
      --name pdf2img-app \
-     --cpus=0.5 \
+     --cpus=3.0 \
      -p 8090:8090 \
      -v "$(pwd)/uploads:/app/uploads" \
      -v "$(pwd)/output:/app/output" \
+     -v "$(pwd)/status:/app/status" \
      --restart unless-stopped \
      pdf-to-image-web
    ```
 
 ## Resource Limitations
 
-The Docker container is limited to 50% CPU usage to prevent it from consuming excessive resources. This configuration is set in both the GitHub Actions workflow file and the local-run.sh script.
+The Docker container is configured to use a configurable amount of CPU cores. By default, this is set to 3.0 cores (50% of a 6-core server). You can adjust this allocation by:
+
+1. For GitHub Actions deployment: Change the `CPU_CORES` environment variable in `.github/workflows/deploy.yml`
+2. For local deployment: Modify the `CPU_CORES` variable at the top of the `local-run.sh` script
+
+This configuration allows for efficient PDF processing while giving you control over resource allocation based on your server's capacity.
 
 ## Production Deployment
 
