@@ -106,10 +106,48 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>PDF转图片工具</h1>
-            <a href="/history" class="btn btn-outline-primary">
-                <i class="fas fa-history me-2"></i>转换历史
-            </a>
+            <div class="d-flex gap-2">
+                <a href="/history" class="btn btn-outline-primary">
+                    <i class="fas fa-history me-2"></i>转换历史
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                <i class="fas fa-user-cog me-2"></i>个人资料
+                            </a>
+                        </li>
+                        {% if current_user.is_admin %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('admin') }}">
+                                <i class="fas fa-users-cog me-2"></i>用户管理
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         
         <div class="upload-form" id="uploadFormContainer">
             <div class="text-center mb-4">
