@@ -66,8 +66,8 @@ jobs:
           
           # Check container logs for successful start
           if docker logs ${{ env.CONTAINER_NAME }} 2>&1 | grep -q "Running on http"; then
-            if curl -s http://localhost:${{ env.PORT }} -m 3 > /dev/null; then
-              echo "✅ Deployment successful! Application is running at http://localhost:${{ env.PORT }}"
+            if curl -s http://${{ vars.HOST }}:${{ env.PORT }} -m 3 > /dev/null; then
+              echo "✅ Deployment successful! Application is running at http://${{ vars.HOST }}:${{ env.PORT }}"
               docker ps | grep ${{ env.CONTAINER_NAME }}
               exit 0
             fi
