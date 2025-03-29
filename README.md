@@ -1,0 +1,169 @@
+# PDF to Image Web Application
+
+A web-based application that allows users to:
+- Upload PDF files
+- Convert PDFs to high-quality images
+- View the converted images in a web browser
+- Download individual images or all images as a ZIP archive
+
+## Features
+
+- Simple and intuitive web interface
+- PDF processing options:
+  - Adjustable DPI (resolution)
+  - Page rotation options
+  - Split double pages
+  - Crop margins to remove artifacts
+- Responsive design for mobile and desktop
+- Dark/light mode for image viewing
+- Docker-based for easy deployment
+- CPU usage limitation (50% by default)
+- GitHub Actions deployment support
+
+## Prerequisites
+
+- Docker
+
+No other dependencies needed to be installed locally as everything runs in the Docker container.
+
+## Quick Start - Local Deployment
+
+1. Clone this repository:
+   ```
+   git clone <repository-url>
+   cd pdf2img
+   ```
+
+2. Make the local runner script executable:
+   ```
+   chmod +x local-run.sh
+   ```
+
+3. Start the application:
+   ```
+   ./local-run.sh start
+   ```
+
+4. Open your browser and navigate to:
+   ```
+   http://localhost:8090
+   ```
+
+## Local Usage Options
+
+The `local-run.sh` script provides several commands:
+
+```
+./local-run.sh [command]
+```
+
+Commands:
+- `start`: Start the application
+- `stop`: Stop the application
+- `restart`: Rebuild and restart the application
+- `status`: Check if the application is running
+
+Examples:
+```
+# Start the application
+./local-run.sh start
+
+# Check status
+./local-run.sh status
+
+# Rebuild and restart
+./local-run.sh restart
+
+# Stop the application
+./local-run.sh stop
+```
+
+## How It Works
+
+1. Upload a PDF file through the web interface
+2. Select processing options:
+   - DPI (resolution quality)
+   - Rotation (auto-detect or specific angle)
+   - Split pages option (for books with two pages per sheet)
+   - Crop margins (to remove unwanted borders)
+3. Click "Upload and Convert" to process the file
+4. View the results in the web browser
+5. Download individual images or all images as a ZIP file
+
+## Technical Details
+
+This application uses:
+- Flask for the web framework
+- pdf2image for PDF processing
+- OpenCV for image processing and deskewing
+- Bootstrap for the user interface
+- Docker for containerization
+
+## Directory Structure
+
+- `/uploads`: Temporary storage for uploaded PDF files
+- `/output`: Storage for processed images
+- `/templates`: HTML templates
+- `/static`: CSS and static assets
+
+## Automated Deployment
+
+This application supports automated deployment using GitHub Actions with a self-hosted runner:
+
+1. Set up a self-hosted runner on your server
+2. Push changes to the main branch of your repository
+3. GitHub Actions will automatically deploy the application to your server
+
+The deployment workflow performs the following steps:
+- Checks out the latest code
+- Stops and removes any existing container
+- Builds a new Docker image
+- Creates necessary directories for uploads and output
+- Starts a new container with CPU limitations
+- Verifies that the application is running correctly
+
+### GitHub Actions Configuration
+
+The deployment workflow is defined in `.github/workflows/deploy.yml` and uses direct Docker commands to:
+
+- Build the Docker image
+- Start the container with proper volume mounts
+- Limit CPU usage to 50%
+- Expose the application on port 8090
+
+To manually trigger a deployment, go to the Actions tab in your GitHub repository and run the "Deploy to Server" workflow.
+
+## Manual Docker Setup
+
+If you prefer to run commands manually:
+
+1. Build the Docker image:
+   ```
+   docker build -t pdf-to-image-web .
+   ```
+
+2. Create necessary directories:
+   ```
+   mkdir -p uploads output
+   chmod -R 777 uploads output
+   ```
+
+3. Run the container:
+   ```
+   docker run -d \
+     --name pdf2img-app \
+     --cpus=0.5 \
+     -p 8090:8090 \
+     -v "$(pwd)/uploads:/app/uploads" \
+     -v "$(pwd)/output:/app/output" \
+     --restart unless-stopped \
+     pdf-to-image-web
+   ```
+
+## Resource Limitations
+
+The Docker container is limited to 50% CPU usage to prevent it from consuming excessive resources. This configuration is set in both the GitHub Actions workflow file and the local-run.sh script.
+
+## License
+
+See the [LICENSE](LICENSE) file for details. 

@@ -1,0 +1,62 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    env:
+      IMAGE_NAME: pdf-to-image-web
+      CONTAINER_NAME: pdf2img-app
+      PORT: 8090
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Stop and remove existing container
+      run: |
+        if docker ps -a | grep -q ${{ env.CONTAINER_NAME }}; then
+          echo "Stopping existing container..."
+          docker stop ${{ env.CONTAINER_NAME }} || true
+          docker rm ${{ env.CONTAINER_NAME }} || true
+        fi
+      
+    - name: Build Docker image
+      run: |
+        echo "Building Docker image..."
+        docker build -t ${{ env.IMAGE_NAME }} .
+        
+    - name: Create required directories
+      run: |
+        mkdir -p uploads output
+        chmod -R 777 uploads output
+        
+    - name: Start container
+      run: |
+        echo "Starting container with 50% CPU limit..."
+        docker run -d \
+          --name ${{ env.CONTAINER_NAME }} \
+          --cpus=0.5 \
+          -p ${{ env.PORT }}:8090 \
+          -v "$(pwd)/uploads:/app/uploads" \
+          -v "$(pwd)/output:/app/output" \
+          --restart unless-stopped \
+          ${{ env.IMAGE_NAME }}
+        
+    - name: Check deployment
+      run: |
+        echo "Waiting for application to start..."
+        sleep 30
+        if curl -s http://localhost:${{ env.PORT }} > /dev/null; then
+          echo "✅ Deployment successful! Application is running at http://localhost:${{ env.PORT }}"
+          docker ps | grep ${{ env.CONTAINER_NAME }}
+        else
+          echo "❌ Deployment failed!"
+          docker logs ${{ env.CONTAINER_NAME }}
+          exit 1
+        fi 

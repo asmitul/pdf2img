@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF转图片工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 800px;
+            margin-top: 30px;
+        }
+        .upload-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .progress {
+            display: none;
+            margin-top: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center">PDF转图片工具</h1>
+        
+        <div class="upload-form">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="pdfFile" class="form-label">选择PDF文件</label>
+                    <input class="form-control" type="file" id="pdfFile" name="pdf_file" accept=".pdf" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="dpi" class="form-label">DPI设置 (分辨率)</label>
+                    <select class="form-select" id="dpi" name="dpi">
+                        <option value="100">100 (低)</option>
+                        <option value="200">200 (中)</option>
+                        <option value="300" selected>300 (高)</option>
+                        <option value="600">600 (超高)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="rotation" class="form-label">旋转设置</label>
+                    <select class="form-select" id="rotation" name="rotation">
+                        <option value="auto" selected>自动检测</option>
+                        <option value="0">不旋转 (0°)</option>
+                        <option value="90">旋转 90°</option>
+                        <option value="180">旋转 180°</option>
+                        <option value="270">旋转 270°</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="splitPages" name="split">
+                        <label class="form-check-label" for="splitPages">
+                            分割双页 (将页面分为左右两部分)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="cropMargin" class="form-label">裁剪边距 (像素)</label>
+                    <input type="range" class="form-range" min="0" max="50" value="0" id="cropMargin" name="crop_margin">
+                    <div class="text-muted text-center"><span id="cropValue">0</span> 像素</div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary" id="uploadButton">上传并转换</button>
+                </div>
+            </form>
+            
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+            
+            <div id="result" class="alert alert-success">
+                <h4>处理完成!</h4>
+                <p id="resultMessage"></p>
+                <div class="d-grid gap-2">
+                    <a id="viewLink" class="btn btn-primary" target="_blank">查看图片</a>
+                    <a id="downloadLink" class="btn btn-success">下载所有图片</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('cropMargin').addEventListener('input', function() {
+            document.getElementById('cropValue').textContent = this.value;
+        });
+        
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            var progressBar = document.querySelector('.progress-bar');
+            var progress = document.querySelector('.progress');
+            var result = document.getElementById('result');
+            var button = document.getElementById('uploadButton');
+            
+            // Reset
+            result.style.display = 'none';
+            
+            // Show progress
+            progress.style.display = 'block';
+            progressBar.style.width = '0%';
+            button.disabled = true;
+            
+            // Simulate progress (since we don't have real progress events)
+            var progressInterval = setInterval(function() {
+                var currentWidth = parseInt(progressBar.style.width);
+                if (currentWidth < 90) {
+                    progressBar.style.width = (currentWidth + 1) + '%';
+                }
+            }, 300);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                if (data.success) {
+                    setTimeout(function() {
+                        progress.style.display = 'none';
+                        result.style.display = 'block';
+                        document.getElementById('resultMessage').textContent = data.message;
+                        document.getElementById('viewLink').href = '/view/' + data.id;
+                        document.getElementById('downloadLink').href = '/download-all/' + data.id;
+                        button.disabled = false;
+                    }, 500);
+                } else {
+                    alert('错误: ' + data.error);
+                    progress.style.display = 'none';
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                console.error('Error:', error);
+                alert('上传失败，请重试');
+                progress.style.display = 'none';
+                button.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html> 
