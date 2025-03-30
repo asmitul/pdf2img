@@ -144,12 +144,12 @@ def process_pdf(pdf_path, output_dir, dpi=300, split_pages=False, rotation=None,
             left_img = deskewed_pil.crop((0, 0, width // 2, height))
             right_img = deskewed_pil.crop((width // 2, 0, width, height))
             
-            # Save left and right images
-            left_img.save(os.path.join(output_dir, f"{file_base}_page{i+1}_left.png"))
-            right_img.save(os.path.join(output_dir, f"{file_base}_page{i+1}_right.png"))
+            # Save left and right images with zero-padded page numbers
+            left_img.save(os.path.join(output_dir, f"{file_base}_page{i+1:04d}_left.png"))
+            right_img.save(os.path.join(output_dir, f"{file_base}_page{i+1:04d}_right.png"))
         else:
-            # Save the deskewed image
-            deskewed_pil.save(os.path.join(output_dir, f"{file_base}_page{i+1}.png"))
+            # Save the deskewed image with zero-padded page numbers
+            deskewed_pil.save(os.path.join(output_dir, f"{file_base}_page{i+1:04d}.png"))
     
     print(f"All images saved to {output_dir}")
 
